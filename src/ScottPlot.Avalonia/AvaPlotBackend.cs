@@ -1,9 +1,9 @@
-﻿using Avalonia.Controls;
-using Avalonia.VisualTree;
-using ScottPlot.Interactive;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Drawing;
 using System.Threading.Tasks;
+using Avalonia.Controls;
+using Avalonia.VisualTree;
+using ScottPlot.Interactive;
 using Ava = global::Avalonia;
 
 namespace ScottPlot.Avalonia
@@ -105,9 +105,11 @@ namespace ScottPlot.Avalonia
                 plt.SaveFig(filenameTask.Result);
         }
 
-        public override void SetImagePlot(bool lowQuality)
+        public override async Task SetImagePlot(bool lowQuality)
         {
-            view.Find<Ava.Controls.Image>("imagePlot").Source = BmpImageFromBmp(plt.GetBitmap(true, lowQuality));
+            var pltBmp = plt.GetBitmap(true, lowQuality);
+            var bmp = await Task.Run( () => BmpImageFromBmp(pltBmp ) );
+            view.Find<Ava.Controls.Image>("imagePlot").Source = bmp;
         }
 
         public override void OpenInNewWindow()

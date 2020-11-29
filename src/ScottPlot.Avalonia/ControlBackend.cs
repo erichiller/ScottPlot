@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
-using System.Text;
+using System.Threading.Tasks;
 
 namespace ScottPlot.Interactive
 {
@@ -50,7 +50,7 @@ namespace ScottPlot.Interactive
         public abstract void InitializeScottPlot();
 
         protected bool currentlyRendering = false;
-        public void Render(bool skipIfCurrentlyRendering = false, bool lowQuality = false, bool recalculateLayout = false)
+        public async void Render(bool skipIfCurrentlyRendering = false, bool lowQuality = false, bool recalculateLayout = false)
         {
             if (!isDesignerMode)
             {
@@ -63,14 +63,14 @@ namespace ScottPlot.Interactive
                 if (!(skipIfCurrentlyRendering && currentlyRendering))
                 {
                     currentlyRendering = true;
-                    SetImagePlot(lowQuality);
+                    await SetImagePlot(lowQuality);
                     currentlyRendering = false;
                     Rendered?.Invoke(null, null);
                 }
             }
         }
 
-        public abstract void SetImagePlot(bool lowQuality);
+        public abstract Task SetImagePlot(bool lowQuality);
 
         public void CanvasSizeChanged(int dpiCorrectedWidth, int dpiCorrectedHeight)
         {

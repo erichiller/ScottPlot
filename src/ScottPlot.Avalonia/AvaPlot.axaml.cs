@@ -95,9 +95,13 @@ namespace ScottPlot.Avalonia
 
         }
 
-        public void Render()
+        public void Render(bool skipIfCurrentlyRendering = false, bool lowQuality = false, bool recalculateLayout = false)
         {
-            backend.Render();
+            backend.Render(
+                skipIfCurrentlyRendering,
+                lowQuality,
+                recalculateLayout
+            );
         }
 
         public void Reset()
