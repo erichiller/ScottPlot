@@ -2,6 +2,7 @@
 using System.Drawing;
 using System.Threading.Tasks;
 using Avalonia.Controls;
+using Avalonia.Threading;
 using Avalonia.VisualTree;
 using ScottPlot.Interactive;
 using Ava = global::Avalonia;
@@ -29,12 +30,12 @@ namespace ScottPlot.Avalonia
             if (isDesignerMode)
             {
                 // hide the plot
-                mainGrid.RowDefinitions[1].Height = new GridLength(0);
+                mainGrid.RowDefinitions[ 1 ].Height = new GridLength(0);
             }
             else
             {
                 // hide the version info
-                mainGrid.RowDefinitions[0].Height = new GridLength(0);
+                mainGrid.RowDefinitions[ 0 ].Height = new GridLength(0);
                 //dpiScaleInput = settings.gfxFigure.DpiX / 96; THIS IS ONLY NECESSARY ON WPF
                 dpiScaleOutput = settings.gfxFigure.DpiX / 96;
                 view.Find<StackPanel>("canvasDesigner").Background = view.transparentBrush;
@@ -105,11 +106,17 @@ namespace ScottPlot.Avalonia
                 plt.SaveFig(filenameTask.Result);
         }
 
-        public override async Task SetImagePlot(bool lowQuality)
+        public override Task SetImagePlot(bool lowQuality)
         {
-            var pltBmp = plt.GetBitmap(true, lowQuality);
-            var bmp = await Task.Run( () => BmpImageFromBmp(pltBmp ) );
-            view.Find<Ava.Controls.Image>("imagePlot").Source = bmp;
+            Bitmap pltBmp = plt.GetBitmap(true, lowQuality);
+            return Task.Run(() =>
+              {
+                  Ava.Media.Imaging.Bitmap bmp = BmpImageFromBmp(pltBmp);
+                  _ = Dispatcher.UIThread.InvokeAsync(() =>
+                    {
+                        view.Find<Ava.Controls.Image>("imagePlot").Source = bmp;
+                    });
+              });
         }
 
         public override void OpenInNewWindow()
@@ -123,14 +130,17 @@ namespace ScottPlot.Avalonia
         }
         public static Ava.Media.Imaging.Bitmap BmpImageFromBmp(System.Drawing.Bitmap bmp)
         {
-            using (var memory = new System.IO.MemoryStream())
+            lock (bmp)
             {
-                bmp.Save(memory, System.Drawing.Imaging.ImageFormat.Png);
-                memory.Position = 0;
+                using (var memory = new System.IO.MemoryStream())
+                {
+                    bmp.Save(memory, System.Drawing.Imaging.ImageFormat.Png);
+                    memory.Position = 0;
 
-                var bitmapImage = new Ava.Media.Imaging.Bitmap(memory);
+                    var bitmapImage = new Ava.Media.Imaging.Bitmap(memory);
 
-                return bitmapImage;
+                    return bitmapImage;
+                }
             }
         }
 
