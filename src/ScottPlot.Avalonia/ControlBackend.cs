@@ -49,6 +49,7 @@ namespace ScottPlot.Interactive
         }
         public abstract void InitializeScottPlot();
 
+        protected int requestedRenderingId = 0;
         protected bool currentlyRendering = false;
         public async void Render(bool skipIfCurrentlyRendering = false, bool lowQuality = false, bool recalculateLayout = false)
         {
@@ -60,10 +61,16 @@ namespace ScottPlot.Interactive
                 if (equalAxes)
                     plt.AxisEqual();
 
-                if (!(skipIfCurrentlyRendering && currentlyRendering))
+                bool shouldRender = !(skipIfCurrentlyRendering && currentlyRendering);
+                int localRenderId = ++requestedRenderingId;
+
+                if ( shouldRender )
                 {
                     currentlyRendering = true;
                     await SetImagePlot(lowQuality);
+                    // if ( skipIfCurrentlyRendering && requestedRenderingId > localRenderId ){
+                    //     await Render( false, lowQuality, recalculateLayout );
+                    // }
                     currentlyRendering = false;
                     Rendered?.Invoke(null, null);
                 }
